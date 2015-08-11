@@ -474,6 +474,32 @@ describe('Milestones', function() {
       });
     });
 
+    it('should not swallow test exceptions when using restify', function(done) {
+      var createErrorMiddleware = {
+        create: {
+          start: function(req, res, context) {
+            return context.error(403, 'Forbidden', {});
+          }
+        }
+      };
+
+      var forcedErrorResource = rest.resource({
+        model: test.models.User,
+        endpoints: ['/exceptionTest', '/exceptionTest/:id']
+      });
+
+      forcedErrorResource.use(createErrorMiddleware);
+
+      request.post({
+        url: test.baseUrl + '/exceptionTest',
+        json: {}
+      }, function(error, response, body) {
+        expect(response.statusCode).to.eql(400);
+        expect(body.message).to.eql('Forbidden');
+        done();
+      });
+    });
+
   });
 
   describe('auth', function() {
